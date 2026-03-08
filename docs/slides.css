@@ -1,0 +1,14 @@
+/* Smaller text everywhere */
+.reveal {
+  font-size: 30px;              /* adjust: 30, 28, 26... */
+}
+
+/* Make ONLY the title slide bigger again */
+.reveal #title-slide {
+  font-size: 1.25em;            /* increase: 1.15–1.4 */
+}
+
+/* (Optional) Fine-tune title slide headings */
+.reveal #title-slide h1 { font-size: 2.2em; }
+.reveal #title-slide h2 { font-size: 1.4em; }
+.reveal #title-slide p  { font-size: 1.1em; }
