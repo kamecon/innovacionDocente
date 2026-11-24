@@ -116,32 +116,32 @@ shockEffect <- function(inverse, variable, output, responseVariable){
 
 # Create an empty named list to collect results: 
 
-testEmptyList <- vector(mode = "list", length = 3)
-names(testEmptyList) <- shocksNames
-
-#Loop
-
-for (shock in shocksNames) {
-  print(shock)
-  testEmptyList[[shock]] <- shockEffect(
-    inverse = B,
-    variable = testShocks[, c("ICIOP_ROW", ..shock)],
-    output = X,
-    responseVariable = GVA
-  )$VarResponse[, c("REGION","DIFFERENCE")] |>
-    setnames(old = "DIFFERENCE", shock)
-}
-
-# Test results:
-
-GVA_AT_1 <- sum(testEmptyList$AT_1$AT_1)
-print(GVA_AT_1)
-
-GVA_BE_1 <- sum(testEmptyList$BE_1$BE_1)
-print(GVA_BE_1)
-
-GVA_BG_1 <- sum(testEmptyList$BG_1$BG_1)
-print(GVA_BG_1)
+# testEmptyList <- vector(mode = "list", length = 3)
+# names(testEmptyList) <- shocksNames
+# 
+# #Loop
+# 
+# for (shock in shocksNames) {
+#   print(shock)
+#   testEmptyList[[shock]] <- shockEffect(
+#     inverse = B,
+#     variable = testShocks[, c("ICIOP_ROW", ..shock)],
+#     output = X,
+#     responseVariable = GVA
+#   )$VarResponse[, c("REGION","DIFFERENCE")] |>
+#     setnames(old = "DIFFERENCE", shock)
+# }
+# 
+# # Test results:
+# 
+# GVA_AT_1 <- sum(testEmptyList$AT_1$AT_1)
+# print(GVA_AT_1)
+# 
+# GVA_BE_1 <- sum(testEmptyList$BE_1$BE_1)
+# print(GVA_BE_1)
+# 
+# GVA_BG_1 <- sum(testEmptyList$BG_1$BG_1)
+# print(GVA_BG_1)
 
 
 # Build shock -------------------------------------------------------------
@@ -215,17 +215,17 @@ If only one shock is provided, just describe the which countries are more benefi
 
 # Connect to LLM ----------------------------------------------------------
 
-model <- chat_openai_compatible(
-  base_url = "https://api-gpt.jrc.ec.europa.eu/v1",
-  model = "glm-5.3-flash",
-  #credentials = function() Sys.getenv("GPT_API_KEY"),
-  credentials = function() Sys.getenv("OPENAI_API_KEY"),
-  system_prompt = prompt
-)
+# model <- chat_openai_compatible(
+#   base_url = "https://api-gpt.jrc.ec.europa.eu/v1",
+#   model = "glm-5.3-flash",
+#   #credentials = function() Sys.getenv("GPT_API_KEY"),
+#   credentials = function() Sys.getenv("OPENAI_API_KEY"),
+#   system_prompt = prompt
+# )
 
 model <- chat_openai(system_prompt = prompt, model = "gpt-6.2-sol")
-?set_system_prompt
-model$chat("Hello, works?")
+
+#model$chat("Hello, works?")
 
 # Register tool -----------------------------------------------------------
 
@@ -248,14 +248,14 @@ chat01("Diga cual es impacto de un incremento de la demanda del producto  CPA_C2
 
 # Tests -------------------------------------------------------------------
 
-scenarios_nonzero <- melt.data.table(
-  scenarios,
-  id.vars = "ICIOP_ROW",
-  variable.name = "scenario",
-  value.name = "value"
-)[value != 0]
-nrow(scenarios_nonzero)
-
-scenarios_nonzero
-
-
+# scenarios_nonzero <- melt.data.table(
+#   scenarios,
+#   id.vars = "ICIOP_ROW",
+#   variable.name = "scenario",
+#   value.name = "value"
+# )[value != 0]
+# nrow(scenarios_nonzero)
+# 
+# scenarios_nonzero
+# 
+# 
