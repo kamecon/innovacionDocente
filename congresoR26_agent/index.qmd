@@ -1,0 +1,200 @@
+---
+title: Innovación docente con R. De lo clásico a la IA
+author: 
+  - Kamal Romero (UCLM, UCM - ICAE)
+date: 2026-12-03
+execute:
+  eval: false
+  echo: true
+  warning: false
+  message: false
+format:
+  revealjs:
+    css: slides.css
+    title-slide-attributes:
+      data-background-image: cabecera3.jpg
+      data-background-size: cover
+      data-background-position: center
+    footer: "R Sevilla"
+    slide-number: c/t
+    incremental: false
+    theme: solarized
+---
+
+------------------------------------------------------------------------
+
+## Proyecto
+
+-   **Objetivo específico del Proyecto:**
+    -   Diseñar un módulo de curso de política económica que incluya la política medioambiental y un análisis cuantitativo de la misma.
+
+-  **Objetivo general**
+    - No es presentar herramientas de frontera, sino **introducir herramientas que cualquier docente con un conocimiento intermedio del lenguaje R, pueda implementar con un esfuerzo razonable**.
+
+
+------------------------------------------------------------------------
+
+## Cronologia
+
+- XVII Jornadas de Docencia en Economía y Second international ASEPELT conference teaching innovations in economics:
+  + Notas de clase en quarto y webR, y paquetes de asignatura 
+- IV Congreso y XV Jornadas de Usuarios de R: 
+  + Tutor hecho con RAG (etapa IA)
+- XXII Jornadas sobre Docencia de Economía Aplicada y Encuentro de Sevilla R:
+  + Elaboración de skils como actividad de evaluación (fracaso)
+
+------------------------------------------------------------------------
+
+## Estado del Proyecto
+
+-   **Herramientas Desarrolladas:**
+    -   Borrador inicial de notas de clase en Quarto y webR.
+    -   Primera versión de la librería de R.
+    -   Primera versión de un chatbot elaborado usando RAG con las librerías Ellmer y Ragnar
+    -   Ejemplo de elaboración de skills probado con [opencode](https://opencode.ai/)
+    -   **Elaboración de un agente (llamadas a herramientas)**
+
+-   **Herramientas por Desarrollar:**
+    -   Simulador interactivo con Shiny.
+    -   Repositorio con “plantillas” de las herramientas para uso de terceros.
+
+------------------------------------------------------------------------
+
+## Metodología
+
+### Enfoque Propuesto
+
+-   Uso de matrices input-output multi país con extensiones medioambientales.
+-   Ejercicios prácticos usando el lenguajes de programación R.
+
+------------------------------------------------------------------------
+
+## Motivación
+
+### Dos Vertientes
+
+-   **Limitaciones en Cursos Actuales:**
+    -   Los cursos de política económica no dan suficiente espacio a la política medioambiental.
+
+    -   La relevancia de la política ambiental: El 20% del presupuesto de la UE se destina a la lucha contra el cambio climático. [(Fuente)](https://climate.ec.europa.eu/eu-action/eu-funding-climate-action)
+
+    -   Efectos directos en ciudadanía: calidad ambiental, movilidad, consumo y reorganización industrial.
+
+## Motivación
+
+### Dos Vertientes
+
+-   **Análisis Cuantitativo**
+    -   Falta de análisis cuantitativo adecuado en las asignatura de política económica.
+    -   Necesidad de un enfoque cuantitativo más robusto en la política medioambiental.
+    -   Enfoque en la estimación cuantitativa de efectos a nivel práctico y de análisis.
+
+
+
+<!-- ## Metodología -->
+
+<!-- ### Criterios de Diseño -->
+
+<!-- -   **Simplicidad:** -->
+<!--     -   Accesible para estudiantes de grado. -->
+<!--     -   Basado en contabilidad nacional y álgebra lineal básica. -->
+<!-- -   **Interpretabilidad:** -->
+<!--     -   La linealidad del modelo input-output facilita la interpretación de resultados. -->
+
+<!-- ------------------------------------------------------------------------ -->
+
+<!-- ## Metodología -->
+
+<!-- ### Criterios de Diseño -->
+
+<!-- -   **Resultados Cuantitativos:** -->
+<!--     -   Permite estimar el impacto de políticas medioambientales a nivel agregado y sectorial. -->
+
+<!-- ------------------------------------------------------------------------ -->
+
+## Herramientas Propuestas
+
+-   **R:**
+    -   Transversalidad en cursos de economía: econometría, estadística, finanzas, etc.
+    -   Alta empleabilidad en ciencia de datos y consultoría económica.
+    -   Software libre, sin coste para estudiantes y universidades.
+
+------------------------------------------------------------------------
+
+## Objetivos
+
+-   Diseñar un módulo/taller que contemple la política medioambiental con un enfoque cuantitativo.
+-   Desarrollar herramientas de apoyo:
+    -   Notas de clase en formato Quarto y webR.
+    -   Librería de R para el cálculo de la huella de carbono con datos reales.
+    -   Cuestionarios interactivos con soporte de modelos grandes de lenguaje (LLM) usando Ellmer y Ragnar.
+    -   Ejercicios de creación de skills para asistentes de codificación de IA agéntica (Claude code, Cursor, opencode)
+    -   Actividad empleando un agente especializado en impactos de choques de demanda usando análisis input - ouput
+
+------------------------------------------------------------------------
+
+## Chatbot generado con RAG
+
+Un flujo de trabajo básico de RAG generalmente combina estos pasos:
+
+1.  Consulta del usuario – Un usuario proporciona una pregunta en lenguaje natural.
+2.  Recuperador – El sistema recupera documentos o fragmentos relevantes de una base de conocimiento.
+3.  Generador (LLM) – El modelo de lenguaje lee tanto la consulta del usuario como el contexto recuperado para generar una respuesta.
+
+------------------------------------------------------------------------
+
+## Implementación de RAG con Ragnar y Ellmer
+
+Crear repositorio de documentos y definir el modelo de embeddings
+
+```{r}
+
+store_location <- "test.ragnar.duckdb"
+
+store <- ragnar_store_create(
+  store_location,
+  embed = \(x) embed_openai(x, model = "text-embedding-3-small")
+)
+```
+
+Poblar el repositorio con documentos (embeddings a partir de pdfs en este caso)
+
+```{r}
+
+documentFile <- list.files(pattern = ".pdf")
+
+for (file in documentFile) {
+  chunks <- file |> read_as_markdown() |> markdown_chunk()
+  ragnar_store_insert(store, chunks)
+}
+
+ragnar_store_build_index(store)
+
+store2 <- ragnar_store_connect(store_location, read_only = TRUE)
+
+```
+
+## Implementación de RAG con Ragnar y Ellmer
+
+Crear el cliente con un prompt y definir el modelo LLM
+
+```{r}
+
+client2 <- chat_openai(model = "gpt-4.1", 
+                       params = ellmer::params(temperature = 0.2))
+client2$set_system_prompt(glue::trim(
+  "
+You're a teacher that want students to learn about the environmental input output matrices.
+You always respond only quoting material from the knowledge store
+Before you start, ask the user a questions with a intermediate difficulty level and ask the user to answer them via multiple choice.
+Format your responses with markdown.
+After the user answers, provide feedback and then move on to the next question according to  if the answer is wrong (next question is easier) or correct (next question is more difficult).
+You will be questioned in Spanish, you should answer in Spanish
+  "
+))
+
+# Empieza la conversación
+initial_bot_message <- client2$chat("Begin", echo = TRUE) 
+
+```
+
