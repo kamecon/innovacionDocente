@@ -1,8 +1,12 @@
 ---
-title: Innovación docente con R. De lo clásico a la IA
+title: "Innovación docente con R"
+subtitle: "Una (segunda) propuesta con IA"
 author: 
   - Kamal Romero (UCLM, UCM - ICAE)
-date: 2026-12-03
+  - Ana Asensio (Consultora independiente)
+date: "2026"
+date-format: "YYYY"
+lang: es
 execute:
   eval: false
   echo: true
@@ -11,14 +15,26 @@ execute:
 format:
   revealjs:
     css: slides.css
+    theme: default
+    width: 1280
+    height: 720
+    margin: 0.06
+    center: false
+    transition: fade
+    background-transition: none
+    embed-resources: true
+    output-file: innovacion-docente-agentes.html
+    code-overflow: wrap
+    code-line-numbers: false
+    highlight-style: github
     title-slide-attributes:
-      data-background-image: cabecera3.jpg
-      data-background-size: cover
-      data-background-position: center
-    footer: "R Sevilla"
+      data-background-image: congreso.jpe
+      data-background-size: 100% auto
+      data-background-position: top center
+      data-background-color: "#ffffff"
+    footer: "V Congreso y XVI Jornadas de Usuarios de R · 2026"
     slide-number: c/t
     incremental: false
-    theme: solarized
 ---
 
 ------------------------------------------------------------------------
@@ -110,7 +126,7 @@ format:
 <!-- -   **Resultados Cuantitativos:** -->
 <!--     -   Permite estimar el impacto de políticas medioambientales a nivel agregado y sectorial. -->
 
-<!-- ------------------------------------------------------------------------ -->
+------------------------------------------------------------------------
 
 ## Herramientas Propuestas
 
@@ -129,7 +145,7 @@ format:
     -   Librería de R para el cálculo de la huella de carbono con datos reales.
     -   Cuestionarios interactivos con soporte de modelos grandes de lenguaje (LLM) usando Ellmer y Ragnar.
     -   Ejercicios de creación de skills para asistentes de codificación de IA agéntica (Claude code, Cursor, opencode)
-    -   Actividad empleando un agente especializado en impactos de choques de demanda usando análisis input - ouput
+    -   **Actividad empleando un agente especializado en impactos de choques de demanda usando análisis input - ouput**
 
 ------------------------------------------------------------------------
 
@@ -143,7 +159,7 @@ Un flujo de trabajo básico de RAG generalmente combina estos pasos:
 
 ------------------------------------------------------------------------
 
-## Implementación de RAG con Ragnar y Ellmer
+## Implementación de RAG con Ragnar y Ellmer {.code-slide}
 
 Crear repositorio de documentos y definir el modelo de embeddings
 
@@ -156,6 +172,8 @@ store <- ragnar_store_create(
   embed = \(x) embed_openai(x, model = "text-embedding-3-small")
 )
 ```
+
+## Incorporar los documentos {.code-slide}
 
 Poblar el repositorio con documentos (embeddings a partir de pdfs en este caso)
 
@@ -174,7 +192,7 @@ store2 <- ragnar_store_connect(store_location, read_only = TRUE)
 
 ```
 
-## Implementación de RAG con Ragnar y Ellmer
+## El tutor: modelo e instrucciones {.code-slide}
 
 Crear el cliente con un prompt y definir el modelo LLM
 
@@ -184,11 +202,15 @@ client2 <- chat_openai(model = "gpt-4.1",
                        params = ellmer::params(temperature = 0.2))
 client2$set_system_prompt(glue::trim(
   "
-You're a teacher that want students to learn about the environmental input output matrices.
+You're a teacher that want students to learn about the environmental
+input output matrices.
 You always respond only quoting material from the knowledge store
-Before you start, ask the user a questions with a intermediate difficulty level and ask the user to answer them via multiple choice.
+Before you start, ask the user a questions with a intermediate difficulty
+level and ask the user to answer them via multiple choice.
 Format your responses with markdown.
-After the user answers, provide feedback and then move on to the next question according to  if the answer is wrong (next question is easier) or correct (next question is more difficult).
+After the user answers, provide feedback and then move on to the next
+question according to if the answer is wrong (next question is easier)
+or correct (next question is more difficult).
 You will be questioned in Spanish, you should answer in Spanish
   "
 ))
@@ -197,4 +219,169 @@ You will be questioned in Spanish, you should answer in Spanish
 initial_bot_message <- client2$chat("Begin", echo = TRUE) 
 
 ```
+
+------------------------------------------------------------------------
+
+## ¿Qué es un agente?
+
+### Del Chatbot al Agente
+
+-   **Modelo de lenguaje (LLM) con herramientas:**
+    -   Puede solicitar funciones para consultar datos o realizar cálculos.
+    -   Utiliza los resultados para decidir el siguiente paso o elaborar una respuesta.
+
+-   **Aplicación al Proyecto:**
+    -   El estudiante plantea un choque de demanda en lenguaje natural.
+    -   R calcula el impacto en un modelo de multiplicadores input-output y el modelo explica los resultados.
+
+------------------------------------------------------------------------
+
+## ¿Qué es tool calling?
+
+### Llamadas a Herramientas
+
+1.  **Llamada del modelo** – Selecciona una herramienta y propone sus argumentos.
+2.  **Ejecución en R** – La aplicación ejecuta la función y devuelve el resultado al modelo.
+3.  **Respuesta o nueva llamada** – El modelo interpreta el resultado o solicita otra herramienta.
+
+**El modelo solicita; R ejecuta.** Los cálculos exactos se realizan dentro de la herramienta.
+
+
+------------------------------------------------------------------------
+
+## ¿Cómo implementar la herramienta?
+
+### Una Función de R Disponible para el Modelo
+
+1.  **Programar y probar la función** – Suministrar país, producto e importe; calcular el impacto con los datos disponibles en R.
+2.  **Describirla con `tool()`** – Indicar su nombre, cuándo utilizarla y los tipos de sus argumentos.
+#3.  **Devolver resultados interpretables** – Incluir impactos y escenario evaluado.
+3.  **Registrarla en el cliente** – Usar `model$register_tool(toolCompare)`; ellmer gestiona el ciclo de llamadas.
+
+**Separación de tareas:** R calcula; el modelo interpreta. La herramienta no evita que el modelo seleccione argumentos incorrectos.
+
+
+------------------------------------------------------------------------
+
+## Nuestra herramienta: del choque al resultado
+
+### Aprovechar el Código de R Existente
+
+1.  **Construir el escenario** – `buildShock()` crea un vector con el importe en el país y producto seleccionados y ceros en el resto.
+2.  **Realizar el cálculo** – `shockEffect()` utiliza la inversa de Leontief `B`, la producción `X` y el valor añadido `GVA`.
+3.  **Preparar la respuesta** – `evalShock()` devuelve el escenario y el impacto
+
+**El modelo recibe un resumen de resultados, no las matrices completas.** Solo `evalShock()` se ofrece como herramienta.
+
+------------------------------------------------------------------------
+
+## El ciclo del agente
+
+```{mermaid}
+%%| eval: true
+%%| echo: false
+%%| fig-width: 11
+%%| fig-height: 5
+flowchart LR
+    pregunta["Tu pregunta<br/>en lenguaje natural"] --> modelo["El modelo<br/>elige una herramienta o responde"]
+    modelo -->|"1. Solicita una herramienta"| sesion["Tu sesión de R<br/>ejecuta la función sobre los datos"]
+    sesion -->|"2. Devuelve el resultado"| modelo
+    modelo --> respuesta["La respuesta<br/>basada en los resultados"]
+
+    classDef entradaSalida fill:#f1edf8,stroke:#702098,color:#30283d,stroke-width:2px;
+    classDef modelo fill:#702098,stroke:#702098,color:#ffffff;
+    classDef sesion fill:#007da8,stroke:#007da8,color:#ffffff;
+    class pregunta,respuesta entradaSalida;
+    class modelo modelo;
+    class sesion sesion;
+```
+
+Los pasos 1 y 2 se repiten hasta que el modelo puede responder.
+
+::: {.smaller}
+Adaptado de [Jumping Rivers, *Build Your First AI Agent in R*](https://www.jumpingrivers.com/blog/agents-in-production-first-agent/).
+:::
+
+------------------------------------------------------------------------
+
+## Implementación del agente con Ellmer {.code-slide}
+
+Definimos la herramienta
+
+```{r}
+
+toolCompare <- tool(
+  evalShock,
+  name = "evalShock",
+  description = paste(
+    "Evaluate ONE demand shock for ONE country and product.",
+    "Call once per shock. Returns the shock inputs and the top 10",
+    "countries, products and country-product cells",
+    "ranked by the computed indicator."
+  ),
+  arguments = list(
+    country = type_string("Country code, e.g. 'ES'"),
+    product = type_string("CPA product code, e.g. 'CPA_C29'"),
+    amount  = type_number("Increase in final demand")
+  )
+)
+```
+
+## El agente: modelo e instrucciones {.code-slide}
+
+Crear el cliente con un prompt y definir el modelo LLM
+
+```{r}
+
+prompt <-  glue::trim(
+"
+You are an economic analyst with expertise in input-output analysis.
+Specifically, in evaluating the effects of demand shocks on the value
+added using multiplier analisys.
+Call evalShock once per shock. In case more than one shock is provided
+finish with a two-sentence conclusion: which scenario is the most
+favourable and why.
+If only one shock is provided, just describe the which countries are
+more benefit by this shock and sectors globally
+"
+)
+
+model <- chat_openai(system_prompt = prompt, model = "gpt-6.2-sol")
+
+```
+
+## Uso del agente con Ellmer {.code-slide}
+
+Registramos la herramienta y planteamos una consulta
+
+```{r}
+
+model$register_tool(toolCompare)
+
+chat01 <- model$chat
+
+chat01("Diga cual es impacto de un incremento de la demanda del producto
+       CPA_C29 en Austria por 674 unidades en el resto de las economias
+       de la zona euro y el impacto global por sectores")
+
+```
+
+------------------------------------------------------------------------
+
+## Demo
+
+<iframe data-external="1" width="560" height="315" src="https://www.youtube.com/embed/cZAQV2pv-as?si=uSOcLQ232Iiwrrux&amp;start=16" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
+::: {.smaller}
+[Abrir el vídeo en YouTube](https://www.youtube.com/watch?v=cZAQV2pv-as&t=16s).
+:::
+
+## Demo
+
+<iframe data-external="1" width="560" height="315" src="https://www.youtube.com/embed/2v9e9VkNK_s?si=QHCvk-dYtyuTUHha" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
+::: {.smaller}
+[Abrir el vídeo en YouTube](https://www.youtube.com/watch?v=2v9e9VkNK_s).
+:::
+
 
