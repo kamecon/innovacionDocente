@@ -1,7 +1,9 @@
 # innovacionDocente
 Proyecto de herramientas para la docencia con R
 
-Presentación [acá](https://kamecon.github.io/innovacionDocente/)
+[Presentación V Congreso y XVI Jornadas de Usuarios de R](https://kamecon.github.io/innovacionDocente/congresoR26_agent/innovacion-docente-agentes.html)
+
+[Presentación XXII Jornadas sobre Docencia de Economía Aplicada](https://kamecon.github.io/innovacionDocente/)
 
 [Claude skills for R users](https://rworks.dev/posts/claude-skills-for-r-users/)
 
